@@ -1,0 +1,6 @@
+[package]
+name = "kalaha"
+version = "0.1.0"
+authors = ["tessereth <teresa.bradbury@bugcrowd.com>"]
+
+[dependencies]
