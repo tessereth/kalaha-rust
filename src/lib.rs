@@ -4,10 +4,12 @@ const NUM_POOLS: usize = 14;
 #[derive(Debug)]
 pub enum Error {
     EmptyPool,
+    InvalidIndex,
+    GameFinished,
     NotImplemented,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Player {
     A,
     B,
@@ -54,6 +56,15 @@ pub struct Kalaha {
     turn: Turn,
 }
 
+impl Player {
+    fn next(&self) -> Player {
+        match *self {
+            Player::A => Player::B,
+            Player::B => Player::A,
+        }
+    }
+}
+
 impl Turn {
     pub fn is_finished(&self) -> bool {
         match *self {
@@ -77,13 +88,6 @@ impl Pool {
             Pool::Pond(ref x) => x.count,
             Pool::Bank(ref x) => x.count,
         }
-    }
-
-    fn increment(&mut self) {
-        match *self {
-            Pool::Pond(ref mut x) => x.count += 1,
-            Pool::Bank(ref mut x) => x.count += 1,
-        };
     }
 
     fn take(&mut self) -> u32 {
@@ -130,11 +134,17 @@ impl Board {
         }
     }
 
-//    fn valid_move(&self, player: Player, pond: usize) -> Result<(), Error> {
-//        Err(Error::NotImplemented)
-//    }
+    fn valid_move(&self, player: &Player, pond: usize) -> Result<(), Error> {
+        if pond >= NUM_POOLS {
+            Err(Error::InvalidIndex)
+        } else if self.pools[self.pool_idx(player, pond)].count() == 0 {
+            Err(Error::EmptyPool)
+        } else {
+            Ok(())
+        }
+    }
 
-    fn play(&mut self, player: Player, pond: usize) -> Result<Turn, Error> {
+    fn play(&mut self, player: &Player, pond: usize) -> Result<Turn, Error> {
         let mut idx = self.pool_idx(&player, pond);
         let mut count = self.pools[idx].take();
         if count == 0 {
@@ -144,7 +154,7 @@ impl Board {
             idx += 1 % NUM_POOLS;
             match self.pools[idx] {
                 Pool::Pond(ref mut pond) => pond.count += 1,
-                Pool::Bank(ref mut bank) => if bank.player == player {
+                Pool::Bank(ref mut bank) => if bank.player == *player {
                     bank.count += 1;
                 } else {
                     continue;
@@ -152,7 +162,13 @@ impl Board {
             };
             count -= 1;
         }
-        Ok(Turn::Player(player))
+        // TODO: Handle capture
+        // TODO: Handle game finish
+        let next_player = match self.pools[idx] {
+            Pool::Pond(_) => player.next(),
+            Pool::Bank(_) => player.clone(),
+        };
+        Ok(Turn::Player(next_player))
     }
 
     fn to_string(&self) -> String {
@@ -188,12 +204,28 @@ impl Kalaha {
         Kalaha { board: Board::new(), turn: Turn::Player(Player::A) }
     }
 
-    pub fn play(&mut self, player: Player, pond: usize) -> Result<(), Error> {
-        self.turn = self.board.play(player, pond)?;
+    pub fn valid_move(&self, pond: usize) -> Result<(), Error> {
+        match self.turn {
+            Turn::Finished(_) => Err(Error::GameFinished),
+            Turn::Player(ref player) => self.board.valid_move(player, pond)
+        }
+    }
+
+    pub fn play(&mut self, pond: usize) -> Result<(), Error> {
+        self.valid_move(pond)?;
+        self.turn = {
+            let player = match self.turn {
+                Turn::Finished(_) => return Err(Error::GameFinished),
+                Turn::Player(ref player) => player,
+            };
+            self.board.play(player, pond)?
+        };
         Ok(())
     }
 
     pub fn to_string(&self) -> String {
-        self.board.to_string()
+        let mut s = self.board.to_string();
+        s.push_str(&format!("Next turn: {:?}\n", self.turn));
+        s
     }
 }
