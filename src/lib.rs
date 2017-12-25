@@ -17,7 +17,6 @@ pub enum Player {
 
 #[derive(Debug)]
 struct Pond {
-    player: Player,
     count: u32,
 }
 
@@ -75,12 +74,12 @@ impl Turn {
 }
 
 impl Pool {
-    fn new_pond(player: Player) -> Pool {
-        Pool::Pond(Pond { player, count: INIT_COUNT })
+    fn new_pond() -> Pool {
+        Pool::Pond(Pond { count: INIT_COUNT })
     }
 
     fn new_bank(player: Player) -> Pool {
-        Pool::Bank(Bank { player, count: INIT_COUNT })
+        Pool::Bank(Bank { player, count: 0 })
     }
 
     fn count(&self) -> u32 {
@@ -109,19 +108,19 @@ impl Pool {
 impl Board {
     fn new() -> Board {
         let pools = [
-            Pool::new_pond(Player::A),
-            Pool::new_pond(Player::A),
-            Pool::new_pond(Player::A),
-            Pool::new_pond(Player::A),
-            Pool::new_pond(Player::A),
-            Pool::new_pond(Player::A),
+            Pool::new_pond(),
+            Pool::new_pond(),
+            Pool::new_pond(),
+            Pool::new_pond(),
+            Pool::new_pond(),
+            Pool::new_pond(),
             Pool::new_bank(Player::A),
-            Pool::new_pond(Player::B),
-            Pool::new_pond(Player::B),
-            Pool::new_pond(Player::B),
-            Pool::new_pond(Player::B),
-            Pool::new_pond(Player::B),
-            Pool::new_pond(Player::B),
+            Pool::new_pond(),
+            Pool::new_pond(),
+            Pool::new_pond(),
+            Pool::new_pond(),
+            Pool::new_pond(),
+            Pool::new_pond(),
             Pool::new_bank(Player::B),
         ];
         Board { pools }
@@ -144,14 +143,14 @@ impl Board {
         }
     }
 
-    fn play(&mut self, player: &Player, pond: usize) -> Result<Turn, Error> {
+    fn choose(&mut self, player: &Player, pond: usize) -> Result<Turn, Error> {
         let mut idx = self.pool_idx(&player, pond);
         let mut count = self.pools[idx].take();
         if count == 0 {
             return Err(Error::EmptyPool);
         }
         while count > 0 {
-            idx += 1 % NUM_POOLS;
+            idx = (idx + 1) % NUM_POOLS;
             match self.pools[idx] {
                 Pool::Pond(ref mut pond) => pond.count += 1,
                 Pool::Bank(ref mut bank) => if bank.player == *player {
@@ -211,14 +210,14 @@ impl Kalaha {
         }
     }
 
-    pub fn play(&mut self, pond: usize) -> Result<(), Error> {
+    pub fn choose(&mut self, pond: usize) -> Result<(), Error> {
         self.valid_move(pond)?;
         self.turn = {
             let player = match self.turn {
                 Turn::Finished(_) => return Err(Error::GameFinished),
                 Turn::Player(ref player) => player,
             };
-            self.board.play(player, pond)?
+            self.board.choose(player, pond)?
         };
         Ok(())
     }
