@@ -1,16 +1,23 @@
 extern crate kalaha;
 
 use kalaha::Kalaha;
+use kalaha::ai;
 
 fn main() {
-    let mut board = Kalaha::new();
-    println!("{}", board.to_string());
-    board.choose(0);
-    println!("{}", board.to_string());
-    println!("Valid move 0: {:?}", board.valid_move(0));
-    println!("Valid move 1: {:?}", board.valid_move(1));
-    board.choose(1);
-    println!("{}", board.to_string());
-    board.choose(1);
-    println!("{}", board.to_string());
+    let mut game = Kalaha::new();
+    println!("{}", game);
+    game.choose(0);
+    println!("{}", game);
+    println!("Valid move 0: {:?}", game.valid_move(0));
+    println!("Valid move 1: {:?}", game.valid_move(1));
+    game.choose(1);
+    println!("{}", game);
+    game.choose(1);
+    println!("{}", game);
+
+    let ai_a = ai::FirstValid {};
+    let ai_b = ai::LastValid {};
+
+    game.play(&ai_a, &ai_b);
+    println!("{}", game);
 }

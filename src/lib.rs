@@ -1,5 +1,10 @@
+use std::fmt;
+
+pub mod ai;
+
 const INIT_COUNT: u32 = 6;
-const NUM_POOLS: usize = 14;
+const PONDS_PER_PLAYER: usize = 6;
+const TOTAL_POOLS: usize = 14;
 
 #[derive(Debug)]
 pub enum Error {
@@ -34,7 +39,7 @@ enum Pool {
 
 #[derive(Debug)]
 struct Board {
-    pools: [Pool; NUM_POOLS]
+    pools: [Pool; TOTAL_POOLS]
 }
 
 #[derive(Debug)]
@@ -76,6 +81,13 @@ impl Turn {
         match *self {
             Turn::Player(ref player) => player,
             Turn::Finished(_) => panic!("Game has finished"),
+        }
+    }
+
+    pub fn game_result(&self) -> &GameResult {
+        match *self {
+            Turn::Player(_) => panic!("Game has not finished"),
+            Turn::Finished(ref game_result) => game_result,
         }
     }
 }
@@ -141,7 +153,7 @@ impl Board {
     }
 
     fn valid_move(&self, player: &Player, pond: usize) -> Result<(), Error> {
-        if pond >= NUM_POOLS {
+        if pond >= PONDS_PER_PLAYER {
             Err(Error::InvalidIndex)
         } else if self.pools[self.pool_idx(player, pond)].count() == 0 {
             Err(Error::EmptyPool)
@@ -156,7 +168,7 @@ impl Board {
         let mut idx = self.pool_idx(&player, pond);
         let mut count = self.pools[idx].take();
         while count > 0 {
-            idx = (idx + 1) % NUM_POOLS;
+            idx = (idx + 1) % TOTAL_POOLS;
             match self.pools[idx] {
                 Pool::Pond(ref mut pond) => pond.count += 1,
                 Pool::Bank(ref mut bank) => if bank.player == *player {
@@ -174,33 +186,6 @@ impl Board {
             Pool::Bank(_) => player.clone(),
         };
         Turn::Player(next_player)
-    }
-
-    fn to_string(&self) -> String {
-        let mut s = String::new();
-        s.push_str("        Player B\n");
-        s.push_str(&format!("   {:2} {:2} {:2} {:2} {:2} {:2}\n",
-            self.pools[12].count(),
-            self.pools[11].count(),
-            self.pools[10].count(),
-            self.pools[9].count(),
-            self.pools[8].count(),
-            self.pools[7].count(),
-        ));
-        s.push_str(&format!("{:2}                   {:2}\n",
-            self.pools[13].count(),
-            self.pools[6].count(),
-        ));
-        s.push_str(&format!("   {:2} {:2} {:2} {:2} {:2} {:2}\n",
-            self.pools[0].count(),
-            self.pools[1].count(),
-            self.pools[2].count(),
-            self.pools[3].count(),
-            self.pools[4].count(),
-            self.pools[5].count(),
-        ));
-        s.push_str("        Player A\n");
-        s
     }
 }
 
@@ -222,9 +207,52 @@ impl Kalaha {
         self.turn = self.board.choose(self.turn.player(), pond);
     }
 
-    pub fn to_string(&self) -> String {
+    pub fn play<A: ai::AI, B: ai::AI>(&mut self, ai_player_a: &A, ai_player_b: &B) -> &GameResult {
+        while !self.turn.is_finished() {
+            let choice = match *self.turn.player() {
+                Player::A => ai_player_a.choose(&self),
+                Player::B => ai_player_b.choose(&self),
+            };
+            self.choose(choice);
+            println!("{}", self);
+        }
+        self.turn.game_result()
+    }
+}
+
+impl std::fmt::Display for Board {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let mut s = String::new();
+        s.push_str("        Player B\n");
+        s.push_str(&format!("   {:2} {:2} {:2} {:2} {:2} {:2}\n",
+                            self.pools[12].count(),
+                            self.pools[11].count(),
+                            self.pools[10].count(),
+                            self.pools[9].count(),
+                            self.pools[8].count(),
+                            self.pools[7].count(),
+        ));
+        s.push_str(&format!("{:2}                   {:2}\n",
+                            self.pools[13].count(),
+                            self.pools[6].count(),
+        ));
+        s.push_str(&format!("   {:2} {:2} {:2} {:2} {:2} {:2}\n",
+                            self.pools[0].count(),
+                            self.pools[1].count(),
+                            self.pools[2].count(),
+                            self.pools[3].count(),
+                            self.pools[4].count(),
+                            self.pools[5].count(),
+        ));
+        s.push_str("        Player A\n");
+        f.write_str(&s)
+    }
+}
+
+impl fmt::Display for Kalaha {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let mut s = self.board.to_string();
         s.push_str(&format!("Next turn: {:?}\n", self.turn));
-        s
+        f.write_str(&s)
     }
 }
