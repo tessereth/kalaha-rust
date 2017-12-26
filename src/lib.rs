@@ -71,6 +71,13 @@ impl Turn {
             Turn::Finished(_) => true,
         }
     }
+
+    pub fn player(&self) -> &Player {
+        match *self {
+            Turn::Player(ref player) => player,
+            Turn::Finished(_) => panic!("Game has finished"),
+        }
+    }
 }
 
 impl Pool {
@@ -143,12 +150,11 @@ impl Board {
         }
     }
 
-    fn choose(&mut self, player: &Player, pond: usize) -> Result<Turn, Error> {
+    // panics if pond is not a valid_move
+    fn choose(&mut self, player: &Player, pond: usize) -> Turn {
+        self.valid_move(player, pond).expect("Invalid move");
         let mut idx = self.pool_idx(&player, pond);
         let mut count = self.pools[idx].take();
-        if count == 0 {
-            return Err(Error::EmptyPool);
-        }
         while count > 0 {
             idx = (idx + 1) % NUM_POOLS;
             match self.pools[idx] {
@@ -167,7 +173,7 @@ impl Board {
             Pool::Pond(_) => player.next(),
             Pool::Bank(_) => player.clone(),
         };
-        Ok(Turn::Player(next_player))
+        Turn::Player(next_player)
     }
 
     fn to_string(&self) -> String {
@@ -210,16 +216,10 @@ impl Kalaha {
         }
     }
 
-    pub fn choose(&mut self, pond: usize) -> Result<(), Error> {
-        self.valid_move(pond)?;
-        self.turn = {
-            let player = match self.turn {
-                Turn::Finished(_) => return Err(Error::GameFinished),
-                Turn::Player(ref player) => player,
-            };
-            self.board.choose(player, pond)?
-        };
-        Ok(())
+    // panics if pond is not a valid_move
+    pub fn choose(&mut self, pond: usize) {
+        self.valid_move(pond).expect("Invalid move");
+        self.turn = self.board.choose(self.turn.player(), pond);
     }
 
     pub fn to_string(&self) -> String {
