@@ -1,4 +1,5 @@
 use std::fmt;
+use std::cmp::Ordering;
 
 pub mod ai;
 
@@ -45,8 +46,8 @@ struct Board {
 
 #[derive(Debug)]
 pub enum GameResult {
-    Winner(Player),
-    Draw,
+    Winner { player: Player, score_a: u32, score_b: u32 },
+    Draw { score: u32 },
 }
 
 #[derive(Debug)]
@@ -71,6 +72,15 @@ impl Player {
 }
 
 impl Turn {
+    pub fn new_finished(score_a: u32, score_b: u32) -> Turn {
+        let game_result = match score_a.cmp(&score_b) {
+            Ordering::Greater => GameResult::Winner { player: Player::A, score_a, score_b },
+            Ordering::Less => GameResult::Winner { player: Player::B, score_a, score_b },
+            Ordering::Equal => GameResult::Draw { score: score_a },
+        };
+        Turn::Finished(game_result)
+    }
+
     pub fn is_finished(&self) -> bool {
         match *self {
             Turn::Player(_) => false,
@@ -162,12 +172,22 @@ impl Board {
         12 - pond
     }
 
-    fn bank(&mut self, player: &Player) -> &mut Bank {
-        let idx = match *player {
+    fn bank_idx(&self, player: &Player) -> usize {
+        match *player {
             Player::A => 6,
             Player::B => 13,
-        };
-        match self.pools[idx] {
+        }
+    }
+
+    fn bank(&self, player: &Player) -> &Bank {
+        match self.pools[self.bank_idx(player)] {
+            Pool::Bank(ref bank) => bank,
+            _ => panic!("Not a bank")
+        }
+    }
+
+    fn bank_mut(&mut self, player: &Player) -> &mut Bank {
+        match self.pools[self.bank_idx(player)] {
             Pool::Bank(ref mut bank) => bank,
             _ => panic!("Not a bank")
         }
@@ -212,15 +232,48 @@ impl Board {
             Pool::Bank(_) => 0
         };
         if capture > 0 {
-            println!("************ CAPTURE **************");
-            self.bank(player).count += capture + self.pools[self.opposite_idx(idx)].take();
+            self.bank_mut(player).count += capture + self.pools[self.opposite_idx(idx)].take();
         }
-        // TODO: Handle game finish
-        let next_player = match self.pools[idx] {
-            Pool::Pond(_) => player.next(),
-            Pool::Bank(_) => player.clone(),
-        };
-        Turn::Player(next_player)
+        let finished = self.handle_finish();
+        self.next_turn(player, idx, finished)
+    }
+
+    fn handle_finish(&mut self) -> bool {
+        if self.pools[0..6].iter().fold(0, |count, pool| count + pool.count()) == 0 {
+            let mut add_to_bank = 0;
+            for pool in &mut self.pools[7..13] {
+                add_to_bank += pool.take();
+            };
+            if add_to_bank > 0 {
+                self.bank_mut(&Player::B).count += add_to_bank;
+            }
+            true
+        } else if self.pools[7..13].iter().fold(0, |count, pool| count + pool.count()) == 0 {
+            let mut add_to_bank = 0;
+            for pool in &mut self.pools[0..6] {
+                add_to_bank += pool.take();
+            };
+            if add_to_bank > 0 {
+                self.bank_mut(&Player::A).count += add_to_bank;
+            }
+            true
+        } else {
+            false
+        }
+    }
+
+    fn next_turn(&self, current_player: &Player, last_idx: usize, finished: bool) -> Turn {
+        if finished {
+            let a_count = self.bank(&Player::A).count;
+            let b_count = self.bank(&Player::B).count;
+            Turn::new_finished(a_count, b_count)
+        } else {
+            let next_player = match self.pools[last_idx] {
+                Pool::Pond(_) => current_player.next(),
+                Pool::Bank(_) => current_player.clone(),
+            };
+            Turn::Player(next_player)
+        }
     }
 }
 
@@ -242,14 +295,21 @@ impl Kalaha {
         self.turn = self.board.choose(self.turn.player(), pond);
     }
 
-    pub fn play<A: ai::AI, B: ai::AI>(&mut self, ai_player_a: &A, ai_player_b: &B) -> &GameResult {
+    pub fn play<A, B>(&mut self, ai_player_a: &A, ai_player_b: &B, verbose: bool) -> &GameResult
+    where A: ai::AI, B: ai::AI
+    {
+        if verbose {
+            println!("{}", self);
+        }
         while !self.turn.is_finished() {
             let choice = match *self.turn.player() {
                 Player::A => ai_player_a.choose(&self),
                 Player::B => ai_player_b.choose(&self),
             };
             self.choose(choice);
-            println!("{}", self);
+            if verbose {
+                println!("{}", self);
+            }
         }
         self.turn.game_result()
     }

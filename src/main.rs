@@ -18,6 +18,5 @@ fn main() {
     let ai_a = ai::FirstValid {};
     let ai_b = ai::LastValid {};
 
-    game.play(&ai_a, &ai_b);
-    println!("{}", game);
+    game.play(&ai_a, &ai_b, true);
 }
