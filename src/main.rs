@@ -1,7 +1,9 @@
 extern crate kalaha;
 
+use kalaha::Kalaha;
+
 fn main() {
-    let mut board = kalaha::Kalaha::new();
+    let mut board = Kalaha::new();
     println!("{}", board.to_string());
     board.choose(0).expect("Failed to play");
     println!("{}", board.to_string());
