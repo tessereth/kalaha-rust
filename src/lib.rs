@@ -22,6 +22,7 @@ pub enum Player {
 
 #[derive(Debug)]
 struct Pond {
+    player: Player,
     count: u32,
 }
 
@@ -92,9 +93,17 @@ impl Turn {
     }
 }
 
+impl Pond {
+    fn take(&mut self) -> u32 {
+        let count = self.count;
+        self.count = 0;
+        count
+    }
+}
+
 impl Pool {
-    fn new_pond() -> Pool {
-        Pool::Pond(Pond { count: INIT_COUNT })
+    fn new_pond(player: Player) -> Pool {
+        Pool::Pond(Pond { player, count: INIT_COUNT })
     }
 
     fn new_bank(player: Player) -> Pool {
@@ -111,14 +120,10 @@ impl Pool {
     fn take(&mut self) -> u32 {
         match *self {
             Pool::Pond(ref mut pond) => {
-                let count = pond.count;
-                pond.count = 0;
-                count
+                pond.take()
             },
-            Pool::Bank(ref mut bank) => {
-                let count = bank.count;
-                bank.count = 0;
-                count
+            Pool::Bank(_) => {
+                panic!("Cannot take from a bank")
             },
         }
     }
@@ -127,19 +132,19 @@ impl Pool {
 impl Board {
     fn new() -> Board {
         let pools = [
-            Pool::new_pond(),
-            Pool::new_pond(),
-            Pool::new_pond(),
-            Pool::new_pond(),
-            Pool::new_pond(),
-            Pool::new_pond(),
+            Pool::new_pond(Player::A),
+            Pool::new_pond(Player::A),
+            Pool::new_pond(Player::A),
+            Pool::new_pond(Player::A),
+            Pool::new_pond(Player::A),
+            Pool::new_pond(Player::A),
             Pool::new_bank(Player::A),
-            Pool::new_pond(),
-            Pool::new_pond(),
-            Pool::new_pond(),
-            Pool::new_pond(),
-            Pool::new_pond(),
-            Pool::new_pond(),
+            Pool::new_pond(Player::B),
+            Pool::new_pond(Player::B),
+            Pool::new_pond(Player::B),
+            Pool::new_pond(Player::B),
+            Pool::new_pond(Player::B),
+            Pool::new_pond(Player::B),
             Pool::new_bank(Player::B),
         ];
         Board { pools }
@@ -149,6 +154,22 @@ impl Board {
         match *player {
             Player::A => pond,
             Player::B => pond + 7,
+        }
+    }
+
+    fn opposite_idx(&self, pond: usize) -> usize {
+        // trust me, it is
+        12 - pond
+    }
+
+    fn bank(&mut self, player: &Player) -> &mut Bank {
+        let idx = match *player {
+            Player::A => 6,
+            Player::B => 13,
+        };
+        match self.pools[idx] {
+            Pool::Bank(ref mut bank) => bank,
+            _ => panic!("Not a bank")
         }
     }
 
@@ -179,7 +200,21 @@ impl Board {
             };
             count -= 1;
         }
-        // TODO: Handle capture
+        let capture = match self.pools[idx] {
+            Pool::Pond(ref mut pond) => {
+                // if we ended on our side if the board, in an empty space
+                if pond.player == *player && pond.count == 1 {
+                    pond.take()
+                } else {
+                    0
+                }
+            },
+            Pool::Bank(_) => 0
+        };
+        if capture > 0 {
+            println!("************ CAPTURE **************");
+            self.bank(player).count += capture + self.pools[self.opposite_idx(idx)].take();
+        }
         // TODO: Handle game finish
         let next_player = match self.pools[idx] {
             Pool::Pond(_) => player.next(),
