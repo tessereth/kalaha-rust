@@ -306,6 +306,9 @@ impl Kalaha {
                 Player::A => ai_player_a.choose(&self),
                 Player::B => ai_player_b.choose(&self),
             };
+            if verbose {
+                println!("Player chose pond {}\n", choice);
+            }
             self.choose(choice);
             if verbose {
                 println!("{}", self);
