@@ -317,37 +317,58 @@ impl Kalaha {
 
 impl std::fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let mut s = String::new();
-        s.push_str("        Player B\n");
-        s.push_str(&format!("   {:2} {:2} {:2} {:2} {:2} {:2}\n",
+        f.write_str("        Player B\n")?;
+        f.write_str(&format!("   {:2} {:2} {:2} {:2} {:2} {:2}\n",
                             self.pools[12].count(),
                             self.pools[11].count(),
                             self.pools[10].count(),
                             self.pools[9].count(),
                             self.pools[8].count(),
                             self.pools[7].count(),
-        ));
-        s.push_str(&format!("{:2}                   {:2}\n",
+        ))?;
+        f.write_str(&format!("{:2}                   {:2}\n",
                             self.pools[13].count(),
                             self.pools[6].count(),
-        ));
-        s.push_str(&format!("   {:2} {:2} {:2} {:2} {:2} {:2}\n",
+        ))?;
+        f.write_str(&format!("   {:2} {:2} {:2} {:2} {:2} {:2}\n",
                             self.pools[0].count(),
                             self.pools[1].count(),
                             self.pools[2].count(),
                             self.pools[3].count(),
                             self.pools[4].count(),
                             self.pools[5].count(),
-        ));
-        s.push_str("        Player A\n");
-        f.write_str(&s)
+        ))?;
+        f.write_str("        Player A\n")
     }
 }
 
 impl fmt::Display for Kalaha {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let mut s = self.board.to_string();
-        s.push_str(&format!("Next turn: {:?}\n", self.turn));
-        f.write_str(&s)
+        f.write_str(&self.board.to_string())?;
+        f.write_str(&format!("{}\n", self.turn))
+    }
+}
+
+impl fmt::Display for GameResult {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        match *self {
+            GameResult::Winner {player: Player::A, score_a, score_b} =>
+                f.write_str(&format!("Player A wins {} to {}", score_a, score_b)),
+            GameResult::Winner {player: Player::B, score_a, score_b} =>
+                f.write_str(&format!("Player B wins {} to {}", score_b, score_a)),
+            GameResult::Draw { score } =>
+                f.write_str(&format!("Draw {} to {}", score, score)),
+        }
+    }
+}
+
+impl fmt::Display for Turn {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        match *self {
+            Turn::Player(Player::A) => f.write_str("Next turn: Player A"),
+            Turn::Player(Player::B) => f.write_str("Next turn: Player B"),
+            Turn::Finished(ref game_result) =>
+                f.write_str(&format!("Game finished: {}", game_result)),
+        }
     }
 }
