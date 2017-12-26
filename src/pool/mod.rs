@@ -1,5 +1,8 @@
 use super::player::Player;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug)]
 pub struct Pond {
     pub player: Player,

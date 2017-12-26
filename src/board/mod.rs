@@ -5,6 +5,9 @@ use super::player::Player;
 use super::pool::{Pool, Bank};
 use super::turn::Turn;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug)]
 pub struct Board {
     pools: [Pool; super::TOTAL_POOLS]

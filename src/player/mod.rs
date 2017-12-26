@@ -1,5 +1,8 @@
 use std::fmt;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Player {
     A,

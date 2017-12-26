@@ -3,6 +3,9 @@ use std::cmp::Ordering;
 
 use super::player::Player;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug)]
 pub enum GameResult {
     Winner { player: Player, score_a: u32, score_b: u32 },

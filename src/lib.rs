@@ -12,9 +12,6 @@ use board::Board;
 
 pub mod ai;
 
-#[cfg(test)]
-mod tests;
-
 const INIT_COUNT: u32 = 6;
 const PONDS_PER_PLAYER: usize = 6;
 const TOTAL_POOLS: usize = 14;
