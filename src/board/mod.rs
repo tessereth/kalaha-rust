@@ -8,7 +8,7 @@ use super::turn::Turn;
 #[cfg(test)]
 mod tests;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Board {
     pools: [Pool; super::TOTAL_POOLS]
 }
