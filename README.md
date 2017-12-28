@@ -29,7 +29,7 @@ which must return a valid move for the current player.
 
 ```rust
 pub trait AI {
-    fn choose(&self, game: &super::Kalaha) -> usize;
+    fn choose(&self, game: &Kalaha) -> usize;
 }
 ```
 
@@ -37,6 +37,8 @@ The following methods are available on the `game` object to help you choose the 
 
 ```rust
 pub fn valid_move(&self, pond: usize) -> Result<(), Error>;
+pub fn current_player(&self) -> &Player;
+pub fn is_finished(&self) -> bool;
 pub fn bank(&self, player: &Player) -> u32;
 pub fn ponds(&self, player: &Player) -> [u32; 6];
 ```

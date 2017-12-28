@@ -35,6 +35,18 @@ impl Kalaha {
         self.board.pond_counts(player)
     }
 
+    pub fn current_player(&self) -> &Player {
+        self.turn.player()
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.turn.is_finished()
+    }
+
+    pub fn game_result(&self) -> &GameResult {
+        self.turn.game_result()
+    }
+
     // panics if pond is not a valid_move
     pub fn choose(&mut self, pond: usize) {
         self.valid_move(pond).expect("Invalid move");
