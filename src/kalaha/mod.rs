@@ -9,7 +9,7 @@ use super::ai;
 #[cfg(test)]
 mod tests;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Kalaha {
     board: Board,
     turn: Turn,
@@ -25,6 +25,14 @@ impl Kalaha {
             Turn::Finished(_) => Err(Error::GameFinished),
             Turn::Player(ref player) => self.board.valid_move(player, pond)
         }
+    }
+
+    pub fn bank(&self, player: &Player) -> u32 {
+        self.board.bank(player).count
+    }
+
+    pub fn ponds(&self, player: &Player) -> [u32; 6] {
+        self.board.pond_counts(player)
     }
 
     // panics if pond is not a valid_move

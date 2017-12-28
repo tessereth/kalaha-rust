@@ -53,6 +53,20 @@ fn valid_move_pond_empty() {
 }
 
 #[test]
+fn bank() {
+    let board = board_from_counts(&[0,0,0,0,0,3,18,6,2,0,1,0,0,42]);
+    assert_eq!(board.bank(&Player::A).count, 18);
+    assert_eq!(board.bank(&Player::B).count, 42);
+}
+
+#[test]
+fn pond_counts() {
+    let board = board_from_counts(&[0,0,0,0,0,3,18,6,2,0,1,0,0,42]);
+    assert_eq!(board.pond_counts(&Player::A), [0,0,0,0,0,3]);
+    assert_eq!(board.pond_counts(&Player::B), [6,2,0,1,0,0]);
+}
+
+#[test]
 fn choose_normal() {
     let mut board = Board::new();
     assert_eq!(board.choose(&Player::A, 1), Turn::Player(Player::B));

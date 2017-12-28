@@ -3,19 +3,19 @@ use super::player::Player;
 #[cfg(test)]
 mod tests;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Pond {
     pub player: Player,
     pub count: u32,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Bank {
     pub player: Player,
     pub count: u32,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Pool {
     Pond(Pond),
     Bank(Bank),

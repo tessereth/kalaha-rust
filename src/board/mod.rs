@@ -1,4 +1,5 @@
 use std::fmt;
+use std::ops;
 
 use super::error::Error;
 use super::player::Player;
@@ -8,7 +9,7 @@ use super::turn::Turn;
 #[cfg(test)]
 mod tests;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Board {
     pools: [Pool; super::TOTAL_POOLS]
 }
@@ -53,7 +54,7 @@ impl Board {
         }
     }
 
-    fn bank(&self, player: &Player) -> &Bank {
+    pub fn bank(&self, player: &Player) -> &Bank {
         match self.pools[self.bank_idx(player)] {
             Pool::Bank(ref bank) => bank,
             _ => panic!("Not a bank")
@@ -65,6 +66,21 @@ impl Board {
             Pool::Bank(ref mut bank) => bank,
             _ => panic!("Not a bank")
         }
+    }
+
+    fn pond_idxs(&self, player: &Player) -> ops::Range<usize> {
+        match *player {
+            Player::A => 0..6,
+            Player::B => 7..13,
+        }
+    }
+
+    pub fn pond_counts(&self, player: &Player) -> [u32; 6] {
+        let mut res = [0; 6];
+        for (i, pond_idx) in self.pond_idxs(player).enumerate() {
+            res[i] = self.pools[pond_idx].count();
+        }
+        res
     }
 
     pub fn valid_move(&self, player: &Player, pond: usize) -> Result<(), Error> {

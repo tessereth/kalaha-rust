@@ -6,13 +6,13 @@ use super::player::Player;
 #[cfg(test)]
 mod tests;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum GameResult {
     Winner { player: Player, score_a: u32, score_b: u32 },
     Draw { score: u32 },
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Turn {
     Player(Player),
     Finished(GameResult),
