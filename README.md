@@ -58,18 +58,13 @@ game.play(ai_player_a, ai_player_b, true);
 The last parameter is the `verbose` flag. If true, each move chosen and the board state after each move will
 be printed to stdout.
 
-The following example AI types are provided in `kalaha::ai`:
+There are some AIs already provided in `kalaha::ai`. You can test them against each other by passing commandline
+arguments to `cargo run`:
 
-```rust
-// chooses the smallest valid move
-let first_valid = FirstValid {};
+```bash
+# run alpha-beta pruning with a depth of 9 against the last valid move AI
+cargo run -- -a alphabeta -d 9 -b last
 
-// chooses the highest valid move
-let last_valid = LastValid {};
-
-// uses the mimimax algorithm with a depth of 6
-let minmax = MinMax::new(6);
-
-// uses the alpha-beta pruning algorithm with a depth of 9
-let alphabeta = AlphaBeta::new(9);
+# see all available options
+cargo run -- -h
 ```

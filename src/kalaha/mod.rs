@@ -53,8 +53,7 @@ impl Kalaha {
         self.turn = self.board.choose(self.turn.player(), pond);
     }
 
-    pub fn play<A, B>(&mut self, ai_player_a: &A, ai_player_b: &B, verbose: bool) -> &GameResult
-        where A: ai::AI, B: ai::AI
+    pub fn play(&mut self, ai_player_a: &Box<ai::AI>, ai_player_b: &Box<ai::AI>, verbose: bool) -> &GameResult
     {
         if verbose {
             println!("{}", self);

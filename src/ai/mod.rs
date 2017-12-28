@@ -1,10 +1,11 @@
+use std::fmt;
 use super::Kalaha;
 use super::player::Player;
 
 #[cfg(test)]
 mod tests;
 
-pub trait AI {
+pub trait AI: fmt::Debug {
     fn choose(&self, game: &Kalaha) -> usize;
 }
 
