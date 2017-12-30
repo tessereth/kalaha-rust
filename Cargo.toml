@@ -1,7 +1,7 @@
 [package]
 name = "kalaha"
 version = "0.1.0"
-authors = ["tessereth <teresa.bradbury@bugcrowd.com>"]
+authors = ["tessereth"]
 
 [dependencies]
 clap = "2.29.0"
